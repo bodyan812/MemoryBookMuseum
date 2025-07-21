@@ -61,7 +61,11 @@ class Veteran
         $this->media = new ArrayCollection();
     }
 
-    // Геттеры и сеттеры
+    public function getWarTypeLabel(): string
+    {
+        return array_search($this->warType, self::WAR_TYPES) ?: $this->warType;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -211,11 +215,6 @@ class Veteran
         }
         $this->warType = $warType;
         return $this;
-    }
-
-    public function getWarTypeLabel(): string
-    {
-        return array_search($this->warType, self::WAR_TYPES) ?: $this->warType;
     }
 
     public function __toString(): string
