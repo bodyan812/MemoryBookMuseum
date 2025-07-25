@@ -1,0 +1,12 @@
+App\Entity\Tables:
+    operations:
+        ApiPlatform\Metadata\Get:
+            uriTemplate: /tables/{id}/guests
+            openapi:
+                parameters:
+                    - name: number
+                      in: query
+                      description: Filter by table number
+                      required: false
+                      schema:
+                          type: integer

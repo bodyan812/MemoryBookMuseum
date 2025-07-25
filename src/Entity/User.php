@@ -9,37 +9,43 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', columns: ['username'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: 'string', length: 180, unique: true)]
-    private string $username;
+    #[ORM\Column(length: 180)]
+    private ?string $username = null;
 
-    #[ORM\Column(type: 'json')]
+    /**
+     * @var list<string> The user roles
+     */
+    #[ORM\Column]
     private array $roles = [];
 
-    #[ORM\Column(type: 'string')]
-    private string $password;
+    /**
+     * @var string The hashed password
+     */
+    #[ORM\Column]
+    private ?string $password = null;
 
-    #[ORM\Column(type: 'boolean')]
+    #[ORM\Column]
     private bool $isAdmin = false;
 
-    // Геттеры и сеттеры
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getUsername(): string
+    public function getUsername(): ?string
     {
         return $this->username;
     }
 
-    public function setUsername(string $username): self
+    public function setUsername(string $username): static
     {
         $this->username = $username;
         return $this;
@@ -47,22 +53,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        return $this->username;
+        return (string) $this->username;
     }
 
     public function getRoles(): array
     {
         $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
-
         if ($this->isAdmin) {
             $roles[] = 'ROLE_ADMIN';
         }
-
+        $roles[] = 'ROLE_USER';
         return array_unique($roles);
     }
 
-    public function setRoles(array $roles): self
+    public function setRoles(array $roles): static
     {
         $this->roles = $roles;
         return $this;
@@ -73,7 +77,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->password;
     }
 
-    public function setPassword(string $password): self
+    public function setPassword(string $password): static
     {
         $this->password = $password;
         return $this;
@@ -84,32 +88,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->isAdmin;
     }
 
-    public function setIsAdmin(bool $isAdmin): self
+    public function setIsAdmin(bool $isAdmin): static
     {
         $this->isAdmin = $isAdmin;
         return $this;
     }
 
+    #[\Deprecated]
     public function eraseCredentials(): void
     {
-        // Если нужно очистить временные чувствительные данные
+        // Очистка временных данных аутентификации
     }
 
     public function __serialize(): array
     {
-        return [
-            'id' => $this->id,
-            'username' => $this->username,
-            'password' => $this->password,
-            'isAdmin' => $this->isAdmin,
-        ];
-    }
+        $data = (array) $this;
+        $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
 
-    public function __unserialize(array $data): void
-    {
-        $this->id = $data['id'];
-        $this->username = $data['username'];
-        $this->password = $data['password'];
-        $this->isAdmin = $data['isAdmin'];
+        return $data;
     }
 }

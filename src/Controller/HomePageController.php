@@ -12,6 +12,6 @@ final class HomePageController extends AbstractController
     public function index(): RedirectResponse
     {
         // Перенаправляем на маршрут входа
-        return $this->redirectToRoute('app_login');
+        return $this->redirectToRoute('admin');
     }
 }
