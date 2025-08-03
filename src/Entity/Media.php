@@ -4,7 +4,11 @@ namespace App\Entity;
 
 use App\Repository\MediaRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Symfony\Component\Validator\Constraints as Assert;
 
+#[Vich\Uploadable]
 #[ORM\Entity(repositoryClass: MediaRepository::class)]
 #[ORM\Table(name: 'media')]
 class Media
@@ -19,6 +23,10 @@ class Media
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
+
+    #[Vich\UploadableField(mapping: "media_file", fileNameProperty: "filePath")]
+    #[Assert\NotNull(message: "Пожалуйста, загрузите файл")]
+    private ?File $file = null;
 
     #[ORM\Column(type: 'string', length: 255)]
     private string $filePath;
@@ -83,6 +91,39 @@ class Media
     public function getVeteran(): Veteran
     {
         return $this->veteran;
+    }
+
+    public function setFile(?File $file = null): void
+    {
+        $this->file = $file;
+
+        if (null !== $file) {
+            $this->setFileTypeFromExtension($file);
+        }
+    }
+
+    private function setFileTypeFromExtension(File $file): void
+    {
+        $extension = strtolower($file->guessExtension() ?: pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
+
+        $imageTypes = ['jpg', 'jpeg', 'png', 'webp'];
+        $videoTypes = ['mp4', 'webm'];
+        $documentTypes = ['pdf', 'docx'];
+
+        if (in_array($extension, $imageTypes)) {
+            $this->fileType = 'image';
+        } elseif (in_array($extension, $videoTypes)) {
+            $this->fileType = 'video';
+        } elseif (in_array($extension, $documentTypes)) {
+            $this->fileType = 'document';
+        } else {
+            $this->fileType = 'other';
+        }
+    }
+
+    public function getFile(): ?File
+    {
+        return $this->file;
     }
 
     public function setVeteran(Veteran $veteran): self

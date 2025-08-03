@@ -15,10 +15,17 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use Vich\UploaderBundle\Form\Type\VichImageType;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class VeteranCrudController extends AbstractCrudController
 {
+    private $requestStack;
+
+    public function __construct(RequestStack $requestStack)
+    {
+        $this->requestStack = $requestStack;
+    }
+
     public static function getEntityFqcn(): string
     {
         return Veteran::class;
@@ -38,9 +45,22 @@ class VeteranCrudController extends AbstractCrudController
     {
         $qb = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
 
-        // Фильтрация по типу войны
-        $warType = $this->getContext()->getRequest()->query->get('warType');
-        if ($warType) {
+        $request = $this->requestStack->getCurrentRequest();
+        $session = $this->requestStack->getSession();
+
+        $warType = $request->query->get('warType');
+
+        if (!$warType) {
+            $warType = $session->get('current_war_type');
+        }
+
+        if (!$warType) {
+            $warType = array_values(Veteran::WAR_TYPES)[0];
+        }
+
+        $session->set('current_war_type', $warType);
+
+        if ($warType && in_array($warType, array_values(Veteran::WAR_TYPES))) {
             $qb->andWhere('entity.warType = :warType')
                 ->setParameter('warType', $warType);
         }
@@ -50,7 +70,7 @@ class VeteranCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
-        return [
+        $fields = [
             TextField::new('lastName', 'Фамилия'),
             TextField::new('firstName', 'Имя'),
             TextField::new('middleName', 'Отчество'),
@@ -59,16 +79,24 @@ class VeteranCrudController extends AbstractCrudController
                 ->setBasePath('uploads/photos')
                 ->setUploadDir('public/uploads/photos')
                 ->setUploadedFileNamePattern('[randomhash].[extension]')
-                ->setRequired(false)
+                ->setFormTypeOptions([
+                    'attr' => [
+                        'accept' => 'image/jpeg,image/png,image/webp'
+                    ]
+                ])
                 ->hideOnIndex(),
 
             AssociationField::new('awards', 'Награды')
-                ->setFormTypeOption('choice_label', 'title')
+                ->formatValue(function ($value, $entity) {
+                    return implode(', ', $entity->getAwards()->map(fn($award) => $award->getTitle())->toArray());
+                })
                 ->setFormTypeOption('by_reference', false)
                 ->autocomplete(),
 
             AssociationField::new('rank', 'Звание')
-                ->setFormTypeOption('choice_label', 'title'),
+                ->formatValue(function ($value, $entity) {
+                    return $entity->getRank() ? $entity->getRank()->getTitle() : '';
+                }),
 
             DateField::new('birthDate', 'Дата рождения'),
             DateField::new('deathDate', 'Дата смерти'),
@@ -78,15 +106,28 @@ class VeteranCrudController extends AbstractCrudController
                 ->setTemplatePath('admin/field/media_collection.html.twig')
                 ->hideOnIndex(),
         ];
+
+        // Добавляем поле для отображения типа войны только в формах
+        if ($pageName === Crud::PAGE_EDIT || $pageName === Crud::PAGE_NEW) {
+            $fields[] = TextField::new('warTypeLabel', 'Тип войны')
+                ->setFormTypeOption('disabled', true);
+        }
+
+        return $fields;
     }
 
     public function createEntity(string $entityFqcn)
     {
         $veteran = new Veteran();
+        $session = $this->requestStack->getSession();
+        $warType = $session->get('current_war_type');
 
-        // Установка типа войны из параметра запроса
-        $warType = $this->getContext()->getRequest()->query->get('warType');
-        if ($warType) {
+        // Устанавливаем войну из сессии
+        if ($warType && in_array($warType, array_values(Veteran::WAR_TYPES))) {
+            $veteran->setWarType($warType);
+        } else {
+            // Если война не установлена, используем первую доступную
+            $warType = array_values(Veteran::WAR_TYPES)[0];
             $veteran->setWarType($warType);
         }
 

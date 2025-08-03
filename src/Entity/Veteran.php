@@ -2,11 +2,16 @@
 
 namespace App\Entity;
 
+use AllowDynamicProperties;
 use App\Repository\VeteranRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
+
+#[AllowDynamicProperties] #[Vich\Uploadable]
 #[ORM\Entity(repositoryClass: VeteranRepository::class)]
 #[ORM\Table(name: 'veterans')]
 class Veteran
@@ -24,9 +29,6 @@ class Veteran
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $middleName = null;
-
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    private ?string $photo = null;
 
     #[ORM\ManyToMany(targetEntity: Award::class)]
     #[ORM\JoinTable(name: 'veteran_awards')]
@@ -47,6 +49,13 @@ class Veteran
     #[ORM\Column(type: 'string', length: 50)]
     private string $warType;
 
+    #[Vich\UploadableField(mapping: 'veteran_photo', fileNameProperty: 'photo')]
+    private ?File $photoFile = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo = null;
+
+
     public const WAR_TYPES = [
         'Российско-чеченский конфликт' => 'chechen',
         'Герои СВО' => 'svo',
@@ -61,11 +70,23 @@ class Veteran
         $this->media = new ArrayCollection();
     }
 
+    public function setWarType(string $warType): self
+    {
+        $validTypes = array_values(self::WAR_TYPES);
+        if (!in_array($warType, $validTypes)) {
+            throw new \InvalidArgumentException("Недопустимый тип войны. Допустимые значения: " . implode(', ', $validTypes));
+        }
+
+        $this->warType = $warType;
+        return $this;
+    }
+
     public function getWarTypeLabel(): string
     {
         return array_search($this->warType, self::WAR_TYPES) ?: $this->warType;
     }
 
+    // Остальные методы остаются без изменений...
     public function getId(): ?int
     {
         return $this->id;
@@ -195,7 +216,6 @@ class Veteran
     public function removeMedium(Media $medium): self
     {
         if ($this->media->removeElement($medium)) {
-            // set the owning side to null (unless already changed)
             if ($medium->getVeteran() === $this) {
                 $medium->setVeteran(null);
             }
@@ -208,13 +228,17 @@ class Veteran
         return $this->warType;
     }
 
-    public function setWarType(string $warType): self
+    public function setPhotoFile(?File $photoFile = null): void
     {
-        if (!in_array($warType, array_values(self::WAR_TYPES))) {
-            throw new \InvalidArgumentException("Invalid war type");
+        $this->photoFile = $photoFile;
+        if (null !== $photoFile) {
+            $this->updatedAt = new \DateTimeImmutable();
         }
-        $this->warType = $warType;
-        return $this;
+    }
+
+    public function getPhotoFile(): ?File
+    {
+        return $this->photoFile;
     }
 
     public function __toString(): string

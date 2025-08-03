@@ -6,7 +6,6 @@ use App\Entity\Media;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Vich\UploaderBundle\Form\Type\VichFileType;
 
@@ -31,9 +30,14 @@ class MediaCrudController extends AbstractCrudController
             TextareaField::new('description', 'Описание'),
             TextField::new('file', 'Файл')
                 ->setFormType(VichFileType::class)
-                ->setFormTypeOption('allow_delete', false)
-                ->setFormTypeOption('download_uri', false)
-                ->setFormTypeOption('asset_helper', true)
+                ->setFormTypeOptions([
+                    'allow_delete' => false,
+                    'download_uri' => false,
+                    'asset_helper' => true,
+                    'constraints' => [
+                        new \Symfony\Component\Validator\Constraints\NotNull(),
+                    ],
+                ])
                 ->setTemplatePath('admin/field/vich_file.html.twig')
                 ->hideOnIndex(),
         ];

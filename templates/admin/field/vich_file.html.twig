@@ -1,0 +1,7 @@
+{% if field.value %}
+    <a href="{{ vich_uploader_asset(field.value) }}" target="_blank">
+        {{ field.value.fileName }}
+    </a>
+{% else %}
+    <span class="badge badge-secondary">Файл отсутствует</span>
+{% endif %}

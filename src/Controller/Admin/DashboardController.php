@@ -16,8 +16,9 @@ use Symfony\Component\HttpFoundation\Response;
 #[AdminDashboard(routePath: '/admin', routeName: 'admin')]
 class DashboardController extends AbstractDashboardController
 {
-    public function __construct(private AdminUrlGenerator $adminUrlGenerator)
-    {
+    public function __construct(
+        private AdminUrlGenerator $adminUrlGenerator
+    ) {
     }
 
     public function index(): Response
@@ -38,19 +39,27 @@ class DashboardController extends AbstractDashboardController
 
     public function configureMenuItems(): iterable
     {
-        yield MenuItem::subMenu('Люди', 'fas fa-users')
-            ->setSubItems([
-                MenuItem::linkToCrud('Российско-чеченский конфликт', 'fas fa-shield', Veteran::class)
-                    ->setQueryParameter('warType', 'chechen'),
-                MenuItem::linkToCrud('Герои СВО', 'fas fa-star', Veteran::class)
-                    ->setQueryParameter('warType', 'svo'),
-                MenuItem::linkToCrud('Герои ВОВ', 'fas fa-medal', Veteran::class)
-                    ->setQueryParameter('warType', 'ww2'),
-                MenuItem::linkToCrud('Локальные конфликты', 'fas fa-globe', Veteran::class)
-                    ->setQueryParameter('warType', 'local'),
-                MenuItem::linkToCrud('Афганская война', 'fas fa-flag', Veteran::class)
-                    ->setQueryParameter('warType', 'afghan'),
-            ]);
+        yield MenuItem::subMenu('Люди', 'fas fa-users')->setSubItems([
+            MenuItem::linkToCrud('Российско-чеченский конфликт', 'fas fa-shield', Veteran::class)
+                ->setQueryParameter('warType', 'chechen')
+                ->setLinkRel('nofollow'),
+
+            MenuItem::linkToCrud('Герои СВО', 'fas fa-star', Veteran::class)
+                ->setQueryParameter('warType', 'svo')
+                ->setLinkRel('nofollow'),
+
+            MenuItem::linkToCrud('Герои ВОВ', 'fas fa-medal', Veteran::class)
+                ->setQueryParameter('warType', 'ww2')
+                ->setLinkRel('nofollow'),
+
+            MenuItem::linkToCrud('Локальные конфликты', 'fas fa-globe', Veteran::class)
+                ->setQueryParameter('warType', 'local')
+                ->setLinkRel('nofollow'),
+
+            MenuItem::linkToCrud('Афганская война', 'fas fa-flag', Veteran::class)
+                ->setQueryParameter('warType', 'afghan')
+                ->setLinkRel('nofollow'),
+        ]);
 
         yield MenuItem::linkToCrud('Звания', 'fas fa-ranking-star', Rank::class);
         yield MenuItem::linkToCrud('Награды', 'fas fa-award', Award::class);
