@@ -241,6 +241,11 @@ class Veteran
         return $this->photoFile;
     }
 
+    public function getPhotoPath(): ?string
+    {
+        return $this->photo ? 'uploads/photos/' . $this->photo : null;
+    }
+
     public function __toString(): string
     {
         return $this->getFullName();

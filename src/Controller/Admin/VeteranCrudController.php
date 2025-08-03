@@ -38,6 +38,7 @@ class VeteranCrudController extends AbstractCrudController
             ->setEntityLabelInPlural('Ветераны')
             ->setSearchFields(['lastName', 'firstName', 'middleName'])
             ->setDefaultSort(['lastName' => 'ASC'])
+            ->setFormOptions(['attr' => ['enctype' => 'multipart/form-data']])
             ->showEntityActionsInlined();
     }
 
@@ -78,13 +79,8 @@ class VeteranCrudController extends AbstractCrudController
             ImageField::new('photo', 'Фото')
                 ->setBasePath('uploads/photos')
                 ->setUploadDir('public/uploads/photos')
-                ->setUploadedFileNamePattern('[randomhash].[extension]')
-                ->setFormTypeOptions([
-                    'attr' => [
-                        'accept' => 'image/jpeg,image/png,image/webp'
-                    ]
-                ])
-                ->hideOnIndex(),
+                // Отображаем как миниатюру в списке
+                ->setTemplatePath('admin/field/thumbnail.html.twig'),
 
             AssociationField::new('awards', 'Награды')
                 ->formatValue(function ($value, $entity) {
@@ -99,7 +95,8 @@ class VeteranCrudController extends AbstractCrudController
                 }),
 
             DateField::new('birthDate', 'Дата рождения'),
-            DateField::new('deathDate', 'Дата смерти'),
+            DateField::new('deathDate', 'Дата смерти')
+                ->hideOnIndex(),
 
             CollectionField::new('media', 'Медиа')
                 ->useEntryCrudForm()
