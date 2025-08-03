@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Media;
 use App\Entity\Award;
 use App\Entity\Rank;
+use App\Entity\User;
 use App\Entity\Veteran;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
@@ -63,6 +64,10 @@ class DashboardController extends AbstractDashboardController
 
         yield MenuItem::linkToCrud('Звания', 'fas fa-ranking-star', Rank::class);
         yield MenuItem::linkToCrud('Награды', 'fas fa-award', Award::class);
-        yield MenuItem::linkToCrud('Медиа', 'fas fa-photo-film', Media::class);
+
+        yield MenuItem::subMenu('Настройки', 'fas fa-cog')->setSubItems([
+            MenuItem::linkToCrud('Пользователи', 'fas fa-user', User::class),
+            MenuItem::linkToUrl('API', 'fas fa-code', '/api')
+        ]);
     }
 }
