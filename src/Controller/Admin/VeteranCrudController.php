@@ -79,7 +79,6 @@ class VeteranCrudController extends AbstractCrudController
             ImageField::new('photo', 'Фото')
                 ->setBasePath('uploads/photos')
                 ->setUploadDir('public/uploads/photos')
-                // Отображаем как миниатюру в списке
                 ->setTemplatePath('admin/field/thumbnail.html.twig'),
 
             AssociationField::new('awards', 'Награды')
@@ -104,7 +103,6 @@ class VeteranCrudController extends AbstractCrudController
                 ->hideOnIndex(),
         ];
 
-        // Добавляем поле для отображения типа войны только в формах
         if ($pageName === Crud::PAGE_EDIT || $pageName === Crud::PAGE_NEW) {
             $fields[] = TextField::new('warTypeLabel', 'Тип войны')
                 ->setFormTypeOption('disabled', true);
@@ -119,11 +117,9 @@ class VeteranCrudController extends AbstractCrudController
         $session = $this->requestStack->getSession();
         $warType = $session->get('current_war_type');
 
-        // Устанавливаем войну из сессии
         if ($warType && in_array($warType, array_values(Veteran::WAR_TYPES))) {
             $veteran->setWarType($warType);
         } else {
-            // Если война не установлена, используем первую доступную
             $warType = array_values(Veteran::WAR_TYPES)[0];
             $veteran->setWarType($warType);
         }

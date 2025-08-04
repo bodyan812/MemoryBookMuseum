@@ -8,7 +8,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: 'users')] // Явно указываем имя таблицы в БД
+#[ORM\Table(name: 'users')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -25,10 +25,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    // Временное поле для хранения пароля в открытом виде
     private ?string $plainPassword = null;
 
-    // Поле для чекбокса администратора
     #[ORM\Column(name: 'is_admin', type: 'boolean', options: ['default' => false])]
     private bool $isAdmin = false;
 

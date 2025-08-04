@@ -31,7 +31,6 @@ class Rank
     #[Groups(['veteran:item', 'rank:read'])]
     private string $title;
 
-    // Геттеры и сеттеры
     public function getId(): ?int
     {
         return $this->id;

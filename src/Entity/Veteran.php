@@ -4,21 +4,14 @@ namespace App\Entity;
 
 use AllowDynamicProperties;
 use ApiPlatform\Metadata\Get;
-use App\Filter\BirthYearFilter;
-use App\Filter\DeathYearFilter;
 use App\Repository\VeteranRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\Serializer\Attribute\SerializedName;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
-use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
-use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Metadata\ApiFilter;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[AllowDynamicProperties] #[ApiResource(
@@ -29,7 +22,6 @@ use Symfony\Component\Serializer\Annotation\Groups;
             paginationEnabled: false,
             filters: ['App\Filter\VeteranFilter']
         ),
-        // Добавленная операция Get
         new Get(
             normalizationContext: ['groups' => ['veteran:item']],
             uriTemplate: '/people/{id}',

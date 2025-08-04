@@ -2,7 +2,6 @@
 
 namespace App\Controller\Admin;
 
-use App\Entity\Media;
 use App\Entity\Award;
 use App\Entity\Rank;
 use App\Entity\User;
