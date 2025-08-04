@@ -28,7 +28,43 @@ class VeteranRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+    public function findByFilters(array $filters): array
+    {
+        $qb = $this->createQueryBuilder('v');
 
+        // Обрабатываем как одиночные значения, а не массивы
+        if (isset($filters['warType'])) {
+            $qb->andWhere('v.warType = :warType')
+                ->setParameter('warType', $filters['warType']);
+        }
+
+        if (isset($filters['rank.id'])) {
+            $qb->andWhere('v.rank = :rankId')
+                ->setParameter('rankId', $filters['rank.id']);
+        }
+
+        if (isset($filters['awards.id'])) {
+            $qb->join('v.awards', 'a')
+                ->andWhere('a.id = :awardId')
+                ->setParameter('awardId', $filters['awards.id']);
+        }
+
+        // Оставляем другие фильтры
+        if (isset($filters['birthDate'])) {
+            $qb->andWhere('YEAR(v.birthDate) = :birthYear')
+                ->setParameter('birthYear', $filters['birthDate']);
+        }
+
+        if (isset($filters['deathDate'])) {
+            $qb->andWhere('YEAR(v.deathDate) = :deathYear')
+                ->setParameter('deathYear', $filters['deathDate']);
+        }
+
+        return $qb
+            ->orderBy('v.lastName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
     /**
      * Поиск ветеранов по ФИО (частичное совпадение)
      */

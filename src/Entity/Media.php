@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\MediaRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -19,9 +20,11 @@ class Media
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(['veteran:item'])]
     private string $title;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[Groups(['veteran:item'])]
     private ?string $description = null;
 
     #[Vich\UploadableField(mapping: "media_file", fileNameProperty: "filePath")]
@@ -38,12 +41,15 @@ class Media
     #[ORM\JoinColumn(nullable: false)]
     private Veteran $veteran;
 
-    // Геттеры и сеттеры
     public function getId(): ?int
     {
         return $this->id;
     }
-
+    #[Groups(['veteran:item'])]
+    public function getWebPath(): string
+    {
+        return 'uploads/media/' . $this->filePath;
+    }
     public function getTitle(): string
     {
         return $this->title;

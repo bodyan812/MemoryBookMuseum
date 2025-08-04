@@ -3,15 +3,40 @@
 namespace App\Entity;
 
 use AllowDynamicProperties;
+use ApiPlatform\Metadata\Get;
+use App\Filter\BirthYearFilter;
+use App\Filter\DeathYearFilter;
 use App\Repository\VeteranRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Serializer\Attribute\SerializedName;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use Symfony\Component\Serializer\Annotation\Groups;
 
-
-#[AllowDynamicProperties] #[Vich\Uploadable]
+#[AllowDynamicProperties] #[ApiResource(
+    operations: [
+        new GetCollection(
+            normalizationContext: ['groups' => ['veteran:read']],
+            uriTemplate: '/veterans',
+            paginationEnabled: false,
+            filters: ['App\Filter\VeteranFilter']
+        ),
+        // Добавленная операция Get
+        new Get(
+            normalizationContext: ['groups' => ['veteran:item']],
+            uriTemplate: '/people/{id}',
+            name: 'api_veteran_item'
+        )
+    ]
+)]
 #[ORM\Entity(repositoryClass: VeteranRepository::class)]
 #[ORM\Table(name: 'veterans')]
 class Veteran
@@ -19,15 +44,19 @@ class Veteran
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['veteran:read', 'veteran:item'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Groups(['veteran:read', 'veteran:item'])]
     private string $lastName;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Groups(['veteran:read', 'veteran:item'])]
     private string $firstName;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    #[Groups(['veteran:read', 'veteran:item'])]
     private ?string $middleName = null;
 
     #[ORM\ManyToMany(targetEntity: Award::class)]
@@ -38,21 +67,33 @@ class Veteran
     private ?Rank $rank = null;
 
     #[ORM\Column(type: 'date', nullable: true)]
+    #[Groups(['veteran:item'])]
     private ?\DateTimeInterface $birthDate = null;
 
     #[ORM\Column(type: 'date', nullable: true)]
+    #[Groups(['veteran:item'])]
     private ?\DateTimeInterface $deathDate = null;
 
     #[ORM\OneToMany(targetEntity: Media::class, mappedBy: 'veteran', cascade: ['persist', 'remove'])]
+    #[Groups(['veteran:item'])]
     private Collection $media;
 
+    #[Groups(['veteran:item'])]
+    public function getImagePath(): ?string
+    {
+        return $this->photo ? 'uploads/photos/' . $this->photo : null;
+    }
+
+
     #[ORM\Column(type: 'string', length: 50)]
+    #[Groups(['veteran:read', 'veteran:item'])]
     private string $warType;
 
     #[Vich\UploadableField(mapping: 'veteran_photo', fileNameProperty: 'photo')]
     private ?File $photoFile = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['veteran:read'])]
     private ?string $photo = null;
 
 
@@ -86,7 +127,6 @@ class Veteran
         return array_search($this->warType, self::WAR_TYPES) ?: $this->warType;
     }
 
-    // Остальные методы остаются без изменений...
     public function getId(): ?int
     {
         return $this->id;
@@ -144,6 +184,7 @@ class Veteran
     /**
      * @return Collection<int, Award>
      */
+    #[Groups(['veteran:item'])]
     public function getAwards(): Collection
     {
         return $this->awards;
@@ -162,6 +203,8 @@ class Veteran
         $this->awards->removeElement($award);
         return $this;
     }
+
+    #[Groups(['veteran:item'])]
 
     public function getRank(): ?Rank
     {
