@@ -25,6 +25,14 @@ class MediaCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
+        $constraints = [];
+
+        if ($pageName === Crud::PAGE_NEW) {
+            $constraints = [
+                new \Symfony\Component\Validator\Constraints\NotNull(),
+            ];
+        }
+
         return [
             TextField::new('title', 'Заголовок'),
             TextareaField::new('description', 'Описание'),
@@ -34,9 +42,7 @@ class MediaCrudController extends AbstractCrudController
                     'allow_delete' => false,
                     'download_uri' => false,
                     'asset_helper' => true,
-                    'constraints' => [
-                        new \Symfony\Component\Validator\Constraints\NotNull(),
-                    ],
+                    'download_label' => false,
                 ])
                 ->setTemplatePath('admin/field/vich_file.html.twig')
                 ->hideOnIndex(),

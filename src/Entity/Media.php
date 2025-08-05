@@ -38,8 +38,8 @@ class Media
     private string $fileType;
 
     #[ORM\ManyToOne(targetEntity: Veteran::class, inversedBy: 'media')]
-    #[ORM\JoinColumn(nullable: false)]
-    private Veteran $veteran;
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Veteran $veteran = null;
 
     public function getId(): ?int
     {
@@ -132,7 +132,14 @@ class Media
         return $this->file;
     }
 
-    public function setVeteran(Veteran $veteran): self
+    public function getFileName(): string
+    {
+        return $this->filePath;
+    }
+
+
+
+    public function setVeteran(?Veteran $veteran): self
     {
         $this->veteran = $veteran;
         return $this;
