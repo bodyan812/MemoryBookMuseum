@@ -70,7 +70,7 @@ class Veteran
     #[Groups(['veteran:item'])]
     private Collection $media;
 
-    #[Groups(['veteran:item'])]
+    #[Groups(['veteran:read', 'veteran:item'])]
     public function getImagePath(): ?string
     {
         return $this->photo ? 'uploads/photos/' . $this->photo : null;
@@ -85,7 +85,6 @@ class Veteran
     private ?File $photoFile = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['veteran:read'])]
     private ?string $photo = null;
 
 
