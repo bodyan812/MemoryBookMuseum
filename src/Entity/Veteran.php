@@ -2,11 +2,32 @@
 
 namespace App\Entity;
 
+use AllowDynamicProperties;
+use ApiPlatform\Metadata\Get;
 use App\Repository\VeteranRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
 
+#[AllowDynamicProperties] #[ApiResource(
+    operations: [
+        new GetCollection(
+            normalizationContext: ['groups' => ['veteran:read']],
+            uriTemplate: '/veterans',
+            paginationEnabled: false
+        ),
+        new Get(
+            normalizationContext: ['groups' => ['veteran:item']],
+            uriTemplate: '/people/{id}',
+            name: 'api_veteran_item'
+        )
+    ]
+)]
 #[ORM\Entity(repositoryClass: VeteranRepository::class)]
 #[ORM\Table(name: 'veterans')]
 class Veteran
@@ -14,19 +35,20 @@ class Veteran
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['veteran:read', 'veteran:item'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Groups(['veteran:read', 'veteran:item'])]
     private string $lastName;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Groups(['veteran:read', 'veteran:item'])]
     private string $firstName;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    #[Groups(['veteran:read', 'veteran:item'])]
     private ?string $middleName = null;
-
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    private ?string $photo = null;
 
     #[ORM\ManyToMany(targetEntity: Award::class)]
     #[ORM\JoinTable(name: 'veteran_awards')]
@@ -36,16 +58,34 @@ class Veteran
     private ?Rank $rank = null;
 
     #[ORM\Column(type: 'date', nullable: true)]
+    #[Groups(['veteran:item'])]
     private ?\DateTimeInterface $birthDate = null;
 
     #[ORM\Column(type: 'date', nullable: true)]
+    #[Groups(['veteran:item'])]
     private ?\DateTimeInterface $deathDate = null;
 
     #[ORM\OneToMany(targetEntity: Media::class, mappedBy: 'veteran', cascade: ['persist', 'remove'])]
+    #[Groups(['veteran:item'])]
     private Collection $media;
 
+    #[Groups(['veteran:read', 'veteran:item'])]
+    public function getImagePath(): ?string
+    {
+        return $this->photo ? 'uploads/photos/' . $this->photo : null;
+    }
+
+
     #[ORM\Column(type: 'string', length: 50)]
+    #[Groups(['veteran:read', 'veteran:item'])]
     private string $warType;
+
+    #[Vich\UploadableField(mapping: 'veteran_photo', fileNameProperty: 'photo')]
+    private ?File $photoFile = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo = null;
+
 
     public const WAR_TYPES = [
         'Российско-чеченский конфликт' => 'chechen',
@@ -61,7 +101,22 @@ class Veteran
         $this->media = new ArrayCollection();
     }
 
-    // Геттеры и сеттеры
+    public function setWarType(string $warType): self
+    {
+        $validTypes = array_values(self::WAR_TYPES);
+        if (!in_array($warType, $validTypes)) {
+            throw new \InvalidArgumentException("Недопустимый тип войны. Допустимые значения: " . implode(', ', $validTypes));
+        }
+
+        $this->warType = $warType;
+        return $this;
+    }
+
+    public function getWarTypeLabel(): string
+    {
+        return array_search($this->warType, self::WAR_TYPES) ?: $this->warType;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -119,6 +174,7 @@ class Veteran
     /**
      * @return Collection<int, Award>
      */
+    #[Groups(['veteran:item'])]
     public function getAwards(): Collection
     {
         return $this->awards;
@@ -137,6 +193,8 @@ class Veteran
         $this->awards->removeElement($award);
         return $this;
     }
+
+    #[Groups(['veteran:item'])]
 
     public function getRank(): ?Rank
     {
@@ -191,7 +249,6 @@ class Veteran
     public function removeMedium(Media $medium): self
     {
         if ($this->media->removeElement($medium)) {
-            // set the owning side to null (unless already changed)
             if ($medium->getVeteran() === $this) {
                 $medium->setVeteran(null);
             }
@@ -204,18 +261,22 @@ class Veteran
         return $this->warType;
     }
 
-    public function setWarType(string $warType): self
+    public function setPhotoFile(?File $photoFile = null): void
     {
-        if (!in_array($warType, array_values(self::WAR_TYPES))) {
-            throw new \InvalidArgumentException("Invalid war type");
+        $this->photoFile = $photoFile;
+        if (null !== $photoFile) {
+            $this->updatedAt = new \DateTimeImmutable();
         }
-        $this->warType = $warType;
-        return $this;
     }
 
-    public function getWarTypeLabel(): string
+    public function getPhotoFile(): ?File
     {
-        return array_search($this->warType, self::WAR_TYPES) ?: $this->warType;
+        return $this->photoFile;
+    }
+
+    public function getPhotoPath(): ?string
+    {
+        return $this->photo ? 'uploads/photos/' . $this->photo : null;
     }
 
     public function __toString(): string

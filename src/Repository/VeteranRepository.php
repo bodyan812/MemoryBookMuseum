@@ -28,7 +28,54 @@ class VeteranRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+    public function findByFilters(
+        ?string $warType = null,
+        ?int $rankId = null,
+        ?int $awardId = null,
+        ?int $birthYear = null,
+        ?int $deathYear = null,
+        ?string $searchQuery = null
+    ): array {
+        $qb = $this->createQueryBuilder('v');
 
+        if ($warType) {
+            $qb->andWhere('v.warType = :warType')
+                ->setParameter('warType', $warType);
+        }
+
+        if ($rankId) {
+            $qb->andWhere('v.rank = :rankId')
+                ->setParameter('rankId', $rankId);
+        }
+
+        if ($awardId) {
+            $qb->join('v.awards', 'a')
+                ->andWhere('a.id = :awardId')
+                ->setParameter('awardId', $awardId);
+        }
+
+        if ($birthYear) {
+            $startDate = new \DateTime($birthYear . '-01-01');
+            $qb->andWhere('v.birthDate >= :birthDate')
+                ->setParameter('birthDate', $startDate);
+        }
+
+        if ($deathYear) {
+            $endDate = new \DateTime($deathYear . '-12-31');
+            $qb->andWhere('v.deathDate <= :deathDate')
+                ->setParameter('deathDate', $endDate);
+        }
+
+        if ($searchQuery) {
+            $qb->andWhere('CONCAT(v.lastName, \' \', v.firstName, \' \', COALESCE(v.middleName, \'\')) LIKE :searchQuery')
+                ->setParameter('searchQuery', '%'.$searchQuery.'%');
+        }
+
+        return $qb
+            ->orderBy('v.lastName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
     /**
      * Поиск ветеранов по ФИО (частичное совпадение)
      */
@@ -68,4 +115,6 @@ class VeteranRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+
 }

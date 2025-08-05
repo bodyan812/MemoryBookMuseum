@@ -1,0 +1,5 @@
+{% if field.value %}
+    <img src="{{ asset('uploads/photos/' ~ field.value) }}" height="50" style="border-radius: 3px;" alt="">
+{% else %}
+    <span class="badge badge-secondary">Нет фото</span>
+{% endif %}

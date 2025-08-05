@@ -51,7 +51,7 @@
     "symfony/yaml": "7.*",
     "twig/extra-bundle": "3.*",
     "twig/twig": "3.*",
-    "vich/uploader-bundle": "^2.5"
+    "vich/uploader-bundle": "^2.7"
   },
   "config": {
     "allow-plugins": {
