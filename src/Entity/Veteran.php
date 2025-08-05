@@ -19,8 +19,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new GetCollection(
             normalizationContext: ['groups' => ['veteran:read']],
             uriTemplate: '/veterans',
-            paginationEnabled: false,
-            filters: ['App\Filter\VeteranFilter']
+            paginationEnabled: false
         ),
         new Get(
             normalizationContext: ['groups' => ['veteran:item']],

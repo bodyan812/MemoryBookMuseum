@@ -28,36 +28,47 @@ class VeteranRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
-    public function findByFilters(array $filters): array
-    {
+    public function findByFilters(
+        ?string $warType = null,
+        ?int $rankId = null,
+        ?int $awardId = null,
+        ?int $birthYear = null,
+        ?int $deathYear = null,
+        ?string $searchQuery = null
+    ): array {
         $qb = $this->createQueryBuilder('v');
 
-        // Обрабатываем как одиночные значения, а не массивы
-        if (isset($filters['warType'])) {
+        if ($warType) {
             $qb->andWhere('v.warType = :warType')
-                ->setParameter('warType', $filters['warType']);
+                ->setParameter('warType', $warType);
         }
 
-        if (isset($filters['rank.id'])) {
+        if ($rankId) {
             $qb->andWhere('v.rank = :rankId')
-                ->setParameter('rankId', $filters['rank.id']);
+                ->setParameter('rankId', $rankId);
         }
 
-        if (isset($filters['awards.id'])) {
+        if ($awardId) {
             $qb->join('v.awards', 'a')
                 ->andWhere('a.id = :awardId')
-                ->setParameter('awardId', $filters['awards.id']);
+                ->setParameter('awardId', $awardId);
         }
 
-        // Оставляем другие фильтры
-        if (isset($filters['birthDate'])) {
-            $qb->andWhere('YEAR(v.birthDate) = :birthYear')
-                ->setParameter('birthYear', $filters['birthDate']);
+        if ($birthYear) {
+            $startDate = new \DateTime($birthYear . '-01-01');
+            $qb->andWhere('v.birthDate >= :birthDate')
+                ->setParameter('birthDate', $startDate);
         }
 
-        if (isset($filters['deathDate'])) {
-            $qb->andWhere('YEAR(v.deathDate) = :deathYear')
-                ->setParameter('deathYear', $filters['deathDate']);
+        if ($deathYear) {
+            $endDate = new \DateTime($deathYear . '-12-31');
+            $qb->andWhere('v.deathDate <= :deathDate')
+                ->setParameter('deathDate', $endDate);
+        }
+
+        if ($searchQuery) {
+            $qb->andWhere('CONCAT(v.lastName, \' \', v.firstName, \' \', COALESCE(v.middleName, \'\')) LIKE :searchQuery')
+                ->setParameter('searchQuery', '%'.$searchQuery.'%');
         }
 
         return $qb
@@ -104,4 +115,6 @@ class VeteranRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+
 }
