@@ -24,3 +24,9 @@ services:
             - '@doctrine'
             - '@logger'
         tags: ['api_platform.filter']
+
+    App\EventSubscriber\EnsureUploadsFolderSubscriber:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+        tags:
+            - { name: kernel.event_subscriber }
